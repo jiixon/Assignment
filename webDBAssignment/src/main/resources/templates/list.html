@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#">일정 게시판</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+            <a class="navbar-brand" id="userName" name="userName" style="color: #dddddd"></a>
+            <a class="nav-item nav-link" th:href="@{/list(nickname=${nickname},usertoken=${usertoken})}">Home </a>
+            <a class="nav-item nav-link" href="javascript:void(0)" onclick="kakaoLogout()">Logout</a>
+        </div>
+    </div>
+    <form class="form-inline"  onsubmit="titleSearch()" method="get" action="/search/title" >
+        <input  class="form-control mr-sm-2" type="search" name="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-secondary" type="submit">Search</button>
+        <input type="hidden" id="nickname" name="nickname" value="">
+        <input type="hidden" id="usertoken1" name="usertoken1" value="">
+        <input type="hidden" id="page" name="page" value="">
+    </form>
+</nav>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="navbar-nav">
+
+        <a class="nav-item nav-link" th:href="@{/detail(usertoken=${usertoken})}">글쓰기 </a>
+    </div>
+</nav>
+    <div>
+        <table class="table">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">타입</th>
+                <th scope="col">제목</th>
+                <th scope="col">작성자</th>
+                <th scope="col">등록일</th>
+                <th scope="col">응원</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr th:if="${ !#lists.isEmpty( pageList )}" th:href="@{/detail(pk=${testobj.pk})}" th:id="${testobj.pk}"  th:each="testobj : ${pageList}">
+                <td th:text="${testobj.type}">타입</td>
+                <td><a th:href="@{/view(pk=${testobj.pk},usertoken=${testobj.userToken})}" th:text="${testobj.title}"></a></td>
+                <td th:text="${testobj.writer}">작성자</td>
+                <td th:text="${#temporals.format(testobj.updateDate,'yyyy-MM-dd')}">등록일</td>
+                <td th:text="${testobj.cheerCnt}">응원</td>
+            </tr>
+            <tr th:unless="${ !#lists.isEmpty( pageList )}">
+                <td colspan="5">조회된 결과가 없습니다.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+<style>
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items : center;
+    }
+
+    .liPagination {
+        list-style: none;
+        float: left;
+        margin: 3px;
+        margin-top: 10px;
+    }
+
+    #link{
+        text-decoration: none;
+    }
+</style>
+
+<div class="pagination" th:if="${totalPage>0 and #strings.equals(sw,'list')}">
+    <ul class="ulPagination">
+        <!-- 처음 페이지로 이동 -->
+        <li class="liPagination">
+            <a th:href="@{/list(nickname=${nickname},usertoken=${usertoken},page=0)}" th:text="'<<'" class="btn btn-outline-secondary" style="text-decoration: none;"></a>
+        </li>
+        <!-- 이전 페이지로 이동 -->
+        <li th:if="${tempStartPage >= pageSize}"class="liPagination">
+            <a th:href="@{/list(nickname=${nickname},usertoken=${usertoken},page=${left})}" th:text="'<'" class="btn btn-outline-secondary"></a>
+        </li>
+        <!-- 특정 페이지로 이동 -->
+        <li th:each="page : ${#numbers.sequence(tempStartPage+1, tempEndPage+1)}" class="liPagination">
+            <a th:href="@{/list(nickname=${nickname},usertoken=${usertoken},page=${page-1})}" th:text="${page}" id="link" class="btn btn-outline-secondary"></a>
+        </li>
+        <!-- 다음 페이지로 이동 -->
+        <li th:if="${tempEndPage < totalPage-1}" class="liPagination">
+            <a th:href="@{/list(nickname=${nickname},usertoken=${usertoken},page=${right})}" th:text="'>'" class="btn btn-outline-secondary"></a>
+        </li>
+        <!-- 마지막 페이지로 이동 -->
+        <li class="liPagination">
+            <a th:href="@{/list(nickname=${nickname},usertoken=${usertoken},page=${totalPage-1})}" th:text="'>>'" class="btn btn-outline-secondary"></a>
+        </li>
+    </ul>
+</div>
+<div class="pagination" th:unless="${totalPage>0 and #strings.equals(sw,'list')}">
+    <ul class="ulPagination">
+        <!-- 처음 페이지로 이동 -->
+        <li class="liPagination">
+            <a th:href="@{/search/title(nickname=${nickname},usertoken1=${usertoken},search=${search},page=0)}" th:text="'<<'" class="btn btn-outline-secondary" style="text-decoration: none;"></a>
+        </li>
+        <!-- 이전 페이지로 이동 -->
+        <li th:if="${tempStartPage >= pageSize}"class="liPagination">
+            <a th:href="@{/search/title(nickname=${nickname},usertoken1=${usertoken},search=${search},page=${left})}" th:text="'<'" class="btn btn-outline-secondary"></a>
+        </li>
+        <!-- 특정 페이지로 이동 -->
+        <li th:each="page : ${#numbers.sequence(tempStartPage+1, tempEndPage+1)}" class="liPagination">
+            <a th:href="@{/search/title(nickname=${nickname},usertoken1=${usertoken},search=${search},page=${page-1})}" th:text="${page}" id="link" class="btn btn-outline-secondary"></a>
+        </li>
+        <!-- 다음 페이지로 이동 -->
+        <li th:if="${tempEndPage < totalPage-1}" class="liPagination">
+            <a th:href="@{/search/title(nickname=${nickname},usertoken1=${usertoken},search=${search},page=${right})}" th:text="'>'" class="btn btn-outline-secondary"></a>
+        </li>
+        <!-- 마지막 페이지로 이동 -->
+        <li class="liPagination">
+            <a th:href="@{/search/title(nickname=${nickname},usertoken1=${usertoken},search=${search},page=${totalPage-1})}" th:text="'>>'" class="btn btn-outline-secondary"></a>
+        </li>
+    </ul>
+</div>
+
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/v1/kakao.min.js"></script>
+    <script th:inline="javascript">
+        var nick;
+        Kakao.init( "09ee15b188e42f61470b76f114e987af" );
+        function getInfo() {
+            console.log("getinfo");
+            Kakao.API.request({
+
+                url: '/v2/user/me',
+                success: function (res) {
+                    var name = res.properties.nickname;
+                    nick = res.properties.nickname;
+                    document.getElementById("userName").innerHTML = name + "님 반갑습니다.";
+                }
+            });
+        }
+        window.onload = getInfo();
+
+        function kakaoLogout() {
+            console.log("logout");
+            if (Kakao.Auth.getAccessToken()) {
+                Kakao.API.request({
+                    url: '/v1/user/unlink',
+                    success: function (response) {
+                        console.log(response)
+                        location.href = 'http://localhost:8080'
+                    },
+                    fail: function (error) {
+                        console.log(error)
+                    },
+                })
+                Kakao.Auth.setAccessToken(undefined)
+            }
+        }
+
+        function titleSearch() {
+            document.getElementById("nickname").value = nick;
+            document.getElementById("usertoken1").value = /*[[${usertoken}]]*/ null;
+            document.getElementById("page").value = /*[[${currentPage}]]*/ null;
+            console.log(nick);
+            console.log($('#usertoken').val());
+
+        }
+    </script>
+</body>
+<!— Footer —>
+<footer class="sticky-footer bg-white" style="position: absolute; bottom: 0;left:0; right: 0;">
+    <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+            <span>2022 &copy; Designed By Jiwon with Web_DB Programming Website </span>
+        </div>
+    </div>
+</footer>
+<!— End of Footer —>
+</html>

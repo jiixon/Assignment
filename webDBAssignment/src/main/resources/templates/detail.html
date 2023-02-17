@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-cener">
+    <div class="container-fluid justify-content-cener">
+        <a class="navbar-brand" id="userName" name="userName" style="color: #dddddd"></a>
+        <span class="navbar-brand mb-0 h1 justify-content-cener">글쓰기</span>
+    </div>
+</nav>
+
+
+<div class= "container">
+    <div class= "container">
+        <form method="post" action="/modify/detail" enctype="application/json" onsubmit="return jsubmit()">
+            <table id="todolist" class= "table table-stripped" style= "text-align: center; boarder: 1px solid #dddddd">
+
+                <tbody>
+                <tr>
+                    <td>
+                        <input type="text" class="form-control" placeholder="일정 제목" maxlength="50" name="scheduleName" th:value="${tableEntity.title}">
+                    </td>
+                </tr>
+                <tr>
+                    <td><textarea class="form-control" placeholder="일정 내용" maxlength="2048" style= "height:150px" name="scheduleContents" th:text="${detailEntity.mainContents}"></textarea></td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" th:name="flexRadioDefault" id="flexRadioDefault1" value="After" th:field="${tableEntity.type}">
+                <label class="form-check-label" for="flexRadioDefault1">
+                    만료된 일정
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" th:name="flexRadioDefault" id="flexRadioDefault2" value="Before" checked th:field="${tableEntity.type}">
+                <label class="form-check-label" for="flexRadioDefault2">
+                    계획중인 일정
+                </label>
+            </div>
+
+
+
+            <table id="userList" style="width: 100%">
+                <colgroup>
+                    <col width = "25%">
+                    <col width = "25%">
+                    <col width = "25%">
+                    <col width = "25%">
+                </colgroup>
+                <thead id ="userThead">
+                <tr>
+                    <th style="width:180px;">시간</th>
+                    <th>일정</th>
+                    <th>완료 여부</th>
+                    <th>
+                        <button type="button" class="btn btn-secondary" onClick="userAdd()">일정 추가</button>
+
+                    </th>
+                </tr>
+                <tr th:id = "tbHead" th:if="${#lists.isEmpty(results)}">
+
+                </tr>
+                <tr th:id = "'no'+${listStat.index}" th:unless="${#lists.isEmpty(results)}" th:each="list:${results}">
+                    <td><input type="text" name="time" id="timesc" th:value="${time[listStat.index]}"></td>
+                    <td><input type="text" class = "mng" name="schedule" id="userNM" th:value="${contents[listStat.index]}"></td>
+                    <td><select id="USE_YN" class ="mng_select"name="result"><option value="N" th:selected="${results[listStat.index] == 'N'}">미완료</option><option value="Y" th:selected="${results[listStat.index] == 'Y'}">완료</option></select></td>
+                    <td><button type="button" class="btn btn-secondary" th:onClick="'onClickCancle('+${listStat.index}+')'">삭제</button></td>
+                </tr>
+
+                </thead>
+                <tbody id = "userTbody">
+                </tbody>
+            </table>
+            <br><br><br>
+            <input type="hidden" id="ispk" name="ispk" th:value="${tableEntity.Pk}">
+            <input type="hidden" id="userToken" name="userToken" th:value="${usertoken}">
+            <input type="submit" class="btn btn-secondary" value="글 수정">
+
+        </form>
+        <form method="get" th:action="@{/delete/detail}" onsubmit="return deletesubmit()">
+            <input type="hidden" id="pk" name="pk" th:value="${tableEntity.Pk}">
+            <input type="hidden" id="nickname" name="nickname" th:value="${nickname}">
+            <input type="hidden" name="usertoken" th:value="${usertoken}">
+            <input type="submit" class="btn btn-secondary" value="삭제">
+        </form>
+    </div>
+</div>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/v1/kakao.min.js"></script>
+<script>
+    function deletesubmit(){
+        if(confirm("삭제하시겠습니까?")){
+            return true;
+        }
+        return false;
+    }
+    var username;
+    Kakao.init( "09ee15b188e42f61470b76f114e987af" );
+    function getInfo() {
+        var trCnt = document.getElementsByTagName('tr').length
+        console.log(trCnt);
+        Kakao.API.request({
+
+            url: '/v2/user/me',
+            success: function (res) {
+                username = res.properties.nickname;
+                document.getElementById("userName").innerHTML = username + "님 반갑습니다.";
+            }
+        });
+    }
+    window.onload = getInfo();
+</script>
+<script>
+
+    var baseCamp = 0;
+
+    // 추가btn 이벤트
+    const userAdd = ()=> {
+
+        var trCnt = document.getElementsByTagName('tr').length;
+        var inner = "";
+        console.log(trCnt)
+        if(baseCamp != 0){
+            trCnt = baseCamp;
+        }
+            inner += '<tr id = "no'+trCnt+'">';
+            inner += '    <td><input type="text" name="time" id="timesc"></td>';
+            inner += `    <td><input type="text" class = "mng" name="schedule" id="userNM"></td>`;
+            inner += `    <td><select id="USE_YN" class ="mng_select"name="result"><option value="N">미완료</option><option value="Y">완료</option></select></td>`;
+            inner += '    <td><button type="button" class="btn btn-secondary" onClick="onClickCancle('+trCnt+')">삭제</button></td>';
+            inner += `</tr>`;
+
+         $('#userTbody').before(inner);
+
+    }
+
+    /*  @description 사용자 정보 입력 row remove */
+    function onClickCancle(trCnt){
+        console.log(trCnt);
+        var row = document.querySelectorAll('.updateRow');
+        $("#no"+trCnt).remove();
+
+        if(trCnt == 11){
+            $('#no1').show();
+        }
+        if(row.length > 0){
+            $('.updateRow').show();
+            $('tr').removeClass('updateRow');
+        }
+
+        var trCnt = document.getElementsByTagName('tr').length;
+        console.log(trCnt);
+
+
+    }
+
+    /*
+    * @description 사용자 정보 수정
+    */
+    function onClickUpdate(){
+
+        var targetBtn = event.target;
+        var parentTr = targetBtn.parentNode.parentNode;
+        var tdNode = parentTr.childNodes;
+        var tdArr = new Array();
+
+        for(var i = 0; i < tdNode.length; i++){
+            tdArr.push(tdNode[i].textContent);
+        }
+
+        var row = document.querySelectorAll('.updateRow')
+        if(row.length == 0){
+            parentTr.className = "updateRow";
+            $('.updateRow').hide();
+
+            baseCamp = tdArr[1];
+            userAdd();
+
+        }else{
+            alert("수정 중인 사용자 정보가 있습니다.")
+        }
+    }
+
+    function jsubmit() {
+        var trCnt = document.getElementsByTagName('tr').length;
+        console.log(trCnt);
+        if (trCnt == 3) {
+            alert("일정을 추가해주세요");
+            return false;
+        }
+        var form = new FormData();
+        form.append("username", username);
+    }
+
+</script>
+
+
+
+</body>
+<!— Footer —>
+<footer class="sticky-footer bg-white" style="position: absolute; bottom: 0;left:0; right: 0;">
+    <div class="container my-auto">
+        <div class="copyright text-center my-auto">
+            <span>2022 &copy; Designed By Jiwon with Web_DB Programming Website </span>
+        </div>
+    </div>
+</footer>
+<!— End of Footer —>
+</html>
