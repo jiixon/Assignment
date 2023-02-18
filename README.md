@@ -5,7 +5,13 @@
   - 사용자: 카카오로그
   - 댓글: CRUD 기능
 ### + 사용 기술  
-주요 프레임워크/라이브러리
-- JAVA 11
-- SpringBoot 2.7.5
-- JPA(Spring Data JPA)
++ 주요 프레임워크/라이브러리
+  - JAVA 11
+  - SpringBoot 2.7.5
+  - JPA(Spring Data JPA)
++ Database
+  - h2database
++ 프론트
+  - html/css
+  - JavaScript
+  - thymeleaf
